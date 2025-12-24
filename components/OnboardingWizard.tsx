@@ -16,12 +16,9 @@ import Step8Height from './onboarding/Step8Height'
 import Step9Weight from './onboarding/Step9Weight'
 import Step10BMI from './onboarding/Step10BMI'
 import Step11GoalWeight from './onboarding/Step11GoalWeight'
-import Step13PlanPreview from './onboarding/Step13PlanPreview'
+import Step12RatingModal from './onboarding/Step12RatingModal'
 import Step14Crafting from './onboarding/Step14Crafting'
-import Step15PlanReady from './onboarding/Step15PlanReady'
-import Step16Paywall from './onboarding/Step16Paywall'
-import Step17Username from './onboarding/Step17Username'
-import Step18Finish from './onboarding/Step18Finish'
+import Step15PlanPreview from './onboarding/Step15PlanPreview'
 
 interface OnboardingWizardProps {
   currentStep: number
@@ -43,12 +40,9 @@ const stepComponents = [
   Step9Weight,
   Step10BMI,
   Step11GoalWeight,
-  Step13PlanPreview,
+  Step12RatingModal,
   Step14Crafting,
-  Step15PlanReady,
-  Step16Paywall,
-  Step17Username,
-  Step18Finish,
+  Step15PlanPreview,
 ]
 
 export default function OnboardingWizard({
@@ -66,8 +60,8 @@ export default function OnboardingWizard({
   }, [currentStep])
   
   const StepComponent = stepComponents[currentStep]
-  const showProgress = currentStep >= 3 && currentStep <= 17
-  const showBackButton = currentStep > 0
+  const showProgress = currentStep >= 3 && currentStep <= 13
+  const showBackButton = currentStep > 0 && currentStep !== 14
   
   const variants = {
     enter: (direction: number) => ({
@@ -101,7 +95,7 @@ export default function OnboardingWizard({
       )}
       
       {/* Header - full width */}
-      {currentStep > 0 && (
+      {currentStep > 0 && currentStep !== 14 && (
         <div className="w-full px-6 pt-6 pb-4 relative z-10">
           <div className="flex items-center gap-3 mb-4">
             {showBackButton && <BackButton onClick={onBack} />}
@@ -112,7 +106,7 @@ export default function OnboardingWizard({
               <div className="absolute top-[-1px] left-0 right-0" style={{ paddingLeft: '6%', paddingRight: '6%' }}>
                 <ProgressBar 
                   current={currentStep - 2} 
-                  total={15} 
+                  total={11} 
                   startPercentage={20}
                 />
               </div>
@@ -139,6 +133,8 @@ export default function OnboardingWizard({
             style={{ zIndex: 1, position: 'relative' }}
           >
             {currentStep === 0 ? (
+              <StepComponent onNext={onNext} onBack={onBack} />
+            ) : currentStep === 14 ? (
               <StepComponent onNext={onNext} onBack={onBack} />
             ) : (
               <div className="w-full flex justify-center">

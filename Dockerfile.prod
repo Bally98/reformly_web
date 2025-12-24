@@ -17,6 +17,9 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine AS runner
 
+# Install dependencies for sharp (image optimization)
+RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
 ENV NODE_ENV=production

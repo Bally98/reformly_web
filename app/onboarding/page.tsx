@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useOnboardingStore } from '@/lib/store'
 import OnboardingWizard from '@/components/OnboardingWizard'
 
-const TOTAL_STEPS = 18
+const TOTAL_STEPS = 15
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)

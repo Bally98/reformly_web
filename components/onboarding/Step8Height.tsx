@@ -66,11 +66,11 @@ export default function Step8Height({ onNext }: Step8HeightProps) {
           What&apos;s your height?
         </h2>
         
-        <div className="flex flex-col items-center mb-8">
-          {/* Input field container */}
-          <div className="w-full max-w-md bg-white rounded-2xl border-2 border-gray-200 p-6">
+        <div className="flex flex-col items-center mb-7">
+          {/* Input field container - widened and less tall */}
+          <div className="w-full max-w-lg bg-white rounded-2xl border-2 border-gray-200 px-8 py-4">
             {/* Unit selector */}
-            <div className="flex justify-center gap-2 mb-6">
+            <div className="flex justify-center gap-2 mb-5">
               <button
                 onClick={() => handleUnitChange('cm')}
                 className={`
@@ -97,7 +97,7 @@ export default function Step8Height({ onNext }: Step8HeightProps) {
               </button>
             </div>
             
-            {/* Value display and input */}
+            {/* Value display and input - wider and less tall */}
             <div className="flex items-center justify-center gap-2">
               <input
                 type="text"
@@ -105,16 +105,16 @@ export default function Step8Height({ onNext }: Step8HeightProps) {
                 value={value}
                 onChange={handleValueChange}
                 onBlur={handleBlur}
-                className="text-6xl font-bold text-gray-800 text-center w-32 border-b-2 border-gray-300 focus:border-primary focus:outline-none pb-2"
+                className="text-5xl font-bold text-gray-800 text-center w-64 h-14 border-b-2 border-gray-300 focus:border-primary focus:outline-none pb-1"
                 placeholder={unit === 'cm' ? '173' : '68'}
+                style={{ minWidth: '14rem', maxWidth: '100%' }}
               />
-              <span className="text-3xl font-semibold text-gray-800">{unit}</span>
+              <span className="text-2xl font-semibold text-gray-800">{unit}</span>
             </div>
           </div>
         </div>
-        
-        {/* Information message */}
-        <div className="bg-primary-light rounded-2xl p-4 max-w-md mx-auto mb-4">
+        {/* Information message - widened and less tall */}
+        <div className="bg-primary-light rounded-2xl px-8 py-3 max-w-lg mx-auto mb-3">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
               <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
@@ -131,6 +131,7 @@ export default function Step8Height({ onNext }: Step8HeightProps) {
             </div>
           </div>
         </div>
+        
         
         <div className="mt-4">
           <div className="flex justify-center px-4">

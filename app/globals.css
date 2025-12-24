@@ -5,6 +5,11 @@
 @layer base {
   body {
     @apply bg-white text-black-button antialiased;
+    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  }
+  
+  * {
+    font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif;
   }
 }
 

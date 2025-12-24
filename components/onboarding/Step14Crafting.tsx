@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Button from '../Button'
 import { motion } from 'framer-motion'
 
 interface Step14CraftingProps {
@@ -55,11 +54,21 @@ export default function Step14Crafting({ onNext }: Step14CraftingProps) {
     })
   }, [progress])
   
+  // Auto-advance to next step when complete
+  useEffect(() => {
+    if (isComplete) {
+      const timer = setTimeout(() => {
+        onNext()
+      }, 500) // Small delay for smooth transition
+      return () => clearTimeout(timer)
+    }
+  }, [isComplete, onNext])
+  
   const circumference = 2 * Math.PI * 80
   const offset = circumference - (progress / 100) * circumference
   
   return (
-    <div className="flex flex-col h-full px-6 py-8">
+    <div className="flex flex-col h-full px-6 py-8 pt-0">
       <div className="flex flex-col justify-start items-center" style={{ paddingTop: '29.76px' }}>
         <h2 className="font-plus-jakarta text-[40px] font-bold leading-[48px] mb-12 text-center text-gray-800">
           Crafting Your Plan
@@ -129,21 +138,6 @@ export default function Step14Crafting({ onNext }: Step14CraftingProps) {
           ))}
         </div>
         
-        {isComplete && (
-          <div className="mt-4">
-            <div className="flex justify-center px-4">
-              <div className="w-full max-w-md">
-                <Button
-                  variant="primary"
-                  className="w-full py-2.5 text-base min-w-[300px]" 
-                  onClick={onNext}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

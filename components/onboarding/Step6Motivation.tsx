@@ -20,7 +20,7 @@ export default function Step6Motivation({ onNext }: Step6MotivationProps) {
           We&apos;ve helped thousands <br/>do it, you&apos;re next.
         </motion.h2>
         
-        <div className="relative w-full max-w-lg px-2 flex items-end gap-3">
+        <div className="relative w-full max-w-lg px-2 flex items-end gap-3 py-10">
           {/* Circular reformly badge - avatar */}
           <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white">
             <span className="text-white text-[9px] font-bold  whitespace-nowrap">reformly</span>

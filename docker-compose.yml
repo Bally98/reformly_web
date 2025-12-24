@@ -9,11 +9,13 @@ services:
     environment:
       - NODE_ENV=development
       - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
     volumes:
       # Mount source code for hot reload
       - .:/app
       - /app/node_modules
-      - /app/.next
+      # Don't mount .next as separate volume to avoid cache issues
     restart: unless-stopped
     stdin_open: true
     tty: true

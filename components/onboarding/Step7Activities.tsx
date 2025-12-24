@@ -135,7 +135,7 @@ export default function Step7Activities({ onNext }: Step7ActivitiesProps) {
         </div>
         
         <div className="mt-auto pt-2 pb-6 flex-shrink-0">
-          <div className="flex justify-center px-4">
+          <div className="flex justify-center px-4 mt-6">
             <div className="w-full max-w-md">
               <Button
                 variant="primary"
