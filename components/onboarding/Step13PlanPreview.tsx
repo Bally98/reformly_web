@@ -56,7 +56,7 @@ export default function Step13PlanPreview({ onNext }: Step13PlanPreviewProps) {
   const range = maxWeight - minWeight || 1
   
   // Create wavy path with 2 waves
-  const createWavyPath = (points: Array<{ x: number; y: number }>) => {
+  const createWavyPath = (points: Array<{ x: number; y: number; weight: number; date: string }>) => {
     if (points.length < 2) return ''
     
     const totalWidth = 400

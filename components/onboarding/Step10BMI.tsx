@@ -54,8 +54,31 @@ export default function Step10BMI({ onNext }: Step10BMIProps) {
   const [category, setCategory] = useState<string | null>(metrics.bmi.category || 'normal')
   
   useEffect(() => {
-    const calculatedBmi = calculateBMI()
-    if (!calculatedBmi) return
+    // Calculate BMI inline to avoid dependency issues
+    if (!metrics.height.value || !metrics.currentWeight?.value) {
+      return
+    }
+    
+    // Convert height to meters
+    let heightInMeters: number
+    if (metrics.height.unit === 'cm') {
+      heightInMeters = metrics.height.value / 100
+    } else {
+      // inches to meters
+      heightInMeters = (metrics.height.value * 2.54) / 100
+    }
+    
+    // Convert weight to kg
+    let weightInKg: number
+    if (metrics.currentWeight.unit === 'kg') {
+      weightInKg = metrics.currentWeight.value
+    } else {
+      // lbs to kg
+      weightInKg = metrics.currentWeight.value * 0.453592
+    }
+    
+    // BMI = weight (kg) / height (m)²
+    const calculatedBmi = weightInKg / (heightInMeters * heightInMeters)
     
     let bmiCategory: 'underweight' | 'normal' | 'overweight' | 'obese' = 'normal'
     
