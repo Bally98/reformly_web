@@ -81,7 +81,14 @@ const getAuthToken = async (url: string, options: RequestOptions): Promise<strin
 
   // Use Firebase token for auth endpoints
   if (options.useFirebaseToken || url.includes('/auth/request-otp') || url.includes('/auth/verify-otp')) {
-    return await getFirebaseIdToken(false)
+    try {
+      return await getFirebaseIdToken(false)
+    } catch (error) {
+      // If Firebase token fails, continue without it - backend may not require it
+      // This prevents Firebase errors from breaking the flow
+      console.warn('Failed to get Firebase token, continuing without it:', error)
+      return null
+    }
   }
 
   // Use backend access token for other endpoints

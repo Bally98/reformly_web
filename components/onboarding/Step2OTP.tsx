@@ -61,30 +61,51 @@ export default function Step2OTP({ onNext }: Step2OTPProps) {
     
     setError(null)
     setIsLoading(true)
+    
     try {
+      console.log('[Step2OTP] Starting OTP verification for email:', auth.email)
+      
+      // Verify OTP - Firebase errors are handled gracefully, won't break the flow
       const result = await verifyEmailOtp(auth.email, code)
+      
+      console.log('[Step2OTP] OTP verification result:', { ok: result.ok, hasData: !!result.data, error: result.error })
+      
       if (result.ok && result.data) {
-        // Mark as verified
+        console.log('[Step2OTP] OTP verified successfully, updating auth state')
+        
+        // Mark as verified FIRST - this is critical for navigation
         setAuth({ isVerified: true })
         
-        // Fetch user data from /auth/me
-        const meResult = await getAuthMe()
-        if (meResult.ok && meResult.data) {
-          setProfile({
-            username: meResult.data.username || '',
-            bio: meResult.data.bio || '',
-            name: meResult.data.name || '',
-          })
+        // Fetch user data from /auth/me (optional, don't block on errors)
+        try {
+          const meResult = await getAuthMe()
+          if (meResult.ok && meResult.data) {
+            console.log('[Step2OTP] User data fetched successfully')
+            setProfile({
+              username: meResult.data.username || '',
+              bio: meResult.data.bio || '',
+              name: meResult.data.name || '',
+            })
+          }
+        } catch (meError) {
+          // Non-critical error, log but continue
+          console.warn('[Step2OTP] Failed to fetch user data, continuing:', meError)
         }
         
-        onNext()
+        // Proceed to next step - use setTimeout to ensure state update is processed
+        // React state updates are asynchronous, so we need to wait a bit
+        console.log('[Step2OTP] Calling onNext() to proceed to next step')
+        setTimeout(() => {
+          onNext()
+        }, 0)
       } else {
+        console.error('[Step2OTP] OTP verification failed:', result.error)
         setError(result.error || 'Invalid verification code')
+        setIsLoading(false)
       }
     } catch (error) {
-      console.error('Failed to verify OTP:', error)
+      console.error('[Step2OTP] Exception during OTP verification:', error)
       setError('Failed to verify code. Please try again.')
-    } finally {
       setIsLoading(false)
     }
   }

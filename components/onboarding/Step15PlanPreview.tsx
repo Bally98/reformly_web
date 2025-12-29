@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import Button from '../Button'
 import BackButton from '../BackButton'
 import { useOnboardingStore } from '@/lib/store'
+import { getSubscriptionPlans, createSubscriptionCheckout, SubscriptionPlan } from '@/lib/api'
 
 interface Step15PlanPreviewProps {
   onNext: () => void
@@ -27,35 +28,54 @@ const activityIcons: Record<string, string> = {
   'Stretching': '/logos/stretching.png',
 }
 
-const plans = [
-  {
-    id: 'weekly',
-    title: 'Weekly Plan',
-    price: '$6.99',
-    pricePerWeek: null,
-    badge: null,
-  },
-  {
-    id: '4-week',
-    title: '4-Week Plan',
-    price: '$19.99',
-    pricePerWeek: '$4.99/week',
-    badge: 'MOST POPULAR',
-  },
-  {
-    id: 'yearly',
-    title: 'Yearly Plan',
-    price: '$119.99',
-    pricePerWeek: '$2.30/week',
-    badge: 'BEST VALUE',
-  },
-]
+// Helper function to format price
+const formatPrice = (amount: number, currency: string = 'usd'): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: 2,
+  }).format(amount / 100) // amount is in cents
+}
+
+// Helper function to calculate price per week
+const calculatePricePerWeek = (amount: number, interval: string, intervalCount: number): string | null => {
+  if (interval === 'week') {
+    return null // Already per week
+  }
+  const weeksInInterval = interval === 'month' ? intervalCount * 4 : interval === 'year' ? intervalCount * 52 : intervalCount
+  const pricePerWeek = amount / weeksInInterval
+  return `${formatPrice(pricePerWeek)}/week`
+}
+
+// Helper function to map plan from API to display format
+const mapPlanToDisplay = (plan: SubscriptionPlan, index: number) => {
+  const badges = ['MOST POPULAR', 'BEST VALUE']
+  return {
+    id: plan.id, // Use price ID from API
+    title: plan.product.name,
+    price: formatPrice(plan.amount, plan.currency),
+    pricePerWeek: calculatePricePerWeek(plan.amount, plan.interval, plan.intervalCount),
+    badge: index === 1 ? badges[0] : index === 2 ? badges[1] : null, // Second plan is most popular, third is best value
+    originalPlan: plan, // Keep original for reference
+  }
+}
 
 export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewProps) {
   const { aboutYou, subscription, setSubscription, profile } = useOnboardingStore()
-  // Initialize from store or default to '4-week'
-  const initialPlan = subscription?.selectedPlanId || '4-week'
-  const [selectedPlan, setSelectedPlan] = useState<string>(initialPlan)
+  const [plans, setPlans] = useState<Array<{
+    id: string
+    title: string
+    price: string
+    pricePerWeek: string | null
+    badge: string | null
+    originalPlan: SubscriptionPlan
+  }>>([])
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true)
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  
+  // Initialize selected plan - use first plan's ID if available, or default to empty
+  const [selectedPlan, setSelectedPlan] = useState<string>(subscription?.selectedPlanId || '')
   const [titleWidth, setTitleWidth] = useState<number>(0)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set([0])) // First FAQ open by default
@@ -66,6 +86,44 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
   const mainGoal = aboutYou.mainGoal ? goalsMap[aboutYou.mainGoal] || aboutYou.mainGoal : 'Lose weight'
   const activities = aboutYou.activities || []
   const displayActivities = activities.slice(0, 2) // Take first 2 activities
+  
+  // Load subscription plans on mount
+  useEffect(() => {
+    const loadPlans = async () => {
+      setIsLoadingPlans(true)
+      try {
+        const result = await getSubscriptionPlans(3)
+        if (result.ok && result.data) {
+          const mappedPlans = result.data.map(mapPlanToDisplay)
+          setPlans(mappedPlans)
+          
+          // Set default selected plan to the second one (most popular) if no plan is selected
+          const currentSelected = subscription?.selectedPlanId || selectedPlan
+          if (!currentSelected && mappedPlans.length > 1) {
+            const defaultPlanId = mappedPlans[1].id
+            setSelectedPlan(defaultPlanId)
+            setSubscription({ selectedPlanId: defaultPlanId })
+          } else if (!currentSelected && mappedPlans.length > 0) {
+            // If only one plan or no second plan, select first
+            const defaultPlanId = mappedPlans[0].id
+            setSelectedPlan(defaultPlanId)
+            setSubscription({ selectedPlanId: defaultPlanId })
+          } else if (currentSelected) {
+            // Ensure selected plan is set
+            setSelectedPlan(currentSelected)
+          }
+        } else {
+          console.error('[Step15] Failed to load plans:', result.error)
+        }
+      } catch (error) {
+        console.error('[Step15] Error loading plans:', error)
+      } finally {
+        setIsLoadingPlans(false)
+      }
+    }
+    
+    loadPlans()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   
   // Measure title width and sync container width
   useEffect(() => {
@@ -106,15 +164,37 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
     }, 0)
   }
   
-  const handleGetPlan = () => {
-    // Stub for now - will navigate to payment later
-    console.log('Get plan clicked for:', selectedPlan)
-    // onNext() // Uncomment when ready to proceed
+  const handleGetPlan = async () => {
+    if (!selectedPlan) {
+      setCheckoutError('Please select a plan')
+      return
+    }
+    
+    setIsProcessingCheckout(true)
+    setCheckoutError(null)
+    
+    try {
+      console.log('[Step15] Creating checkout session for priceId:', selectedPlan)
+      const result = await createSubscriptionCheckout(selectedPlan)
+      
+      if (result.ok && result.data?.url) {
+        console.log('[Step15] Checkout URL received, redirecting:', result.data.url)
+        // Open checkout URL in the same window
+        window.location.href = result.data.url
+      } else {
+        console.error('[Step15] Failed to create checkout session:', result.error)
+        setCheckoutError(result.error || 'Failed to create checkout session. Please try again.')
+        setIsProcessingCheckout(false)
+      }
+    } catch (error) {
+      console.error('[Step15] Error creating checkout session:', error)
+      setCheckoutError('An error occurred. Please try again.')
+      setIsProcessingCheckout(false)
+    }
   }
   
   return (
     <div className="min-h-screen bg-white w-full">
-      {/* Header */}
       <div className="w-full px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
         <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
           <BackButton onClick={onBack} />
@@ -300,11 +380,18 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
         <div className="max-w-7xl mx-auto">
         {/* Payment Plans */}
           <div className="mb-6 sm:mb-8">
+          {isLoadingPlans ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-gray-600">Loading plans...</div>
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-red-600">Failed to load plans. Please refresh the page.</div>
+            </div>
+          ) : (
           <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-end">
             {plans.map((plan) => {
               const isSelected = selectedPlan === plan.id
-              const isPopular = plan.id === '4-week'
-              const isBestValue = plan.id === 'yearly'
               
               // Debug: verify selection state
               if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
@@ -441,18 +528,24 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
               )
             })}
           </div>
+          )}
         </div>
         
         {/* Get My Plan Button */}
-          <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
             <Button
               variant="primary"
               size="md"
               className="w-full max-w-[340px] py-3 sm:py-[13.6px] text-sm sm:text-base md:text-[17px] font-bold"
               onClick={handleGetPlan}
+              isLoading={isProcessingCheckout}
+              disabled={isProcessingCheckout || !selectedPlan || isLoadingPlans}
             >
-              GET MY PLAN
+              {isProcessingCheckout ? 'Processing...' : 'GET MY PLAN'}
             </Button>
+            {checkoutError && (
+              <p className="text-xs text-red-500 mt-2 text-center max-w-[340px]">{checkoutError}</p>
+            )}
           </div>
           
           {/* Features Section */}
@@ -819,7 +912,7 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
                     className="overflow-hidden"
                   >
                     <p className="pb-4 text-gray-700 text-base leading-relaxed pl-0" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
-                      Absolutely! Reformly is designed for all fitness levels, from complete beginners to advanced practitioners. Our programs start with foundational movements and gradually progress, ensuring you build strength and confidence at your own pace. Each workout includes clear instructions and modifications to suit your current level.
+                      Our plans are suitable for different skill levels. You&apos;ll find something for yourself whether you are a beginner or an advanced &quot;Pilates Girlie&quot;!
                     </p>
                   </motion.div>
                 )}
@@ -874,7 +967,7 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
                     className="overflow-hidden"
                   >
                     <p className="pb-4 text-gray-700 text-base leading-relaxed pl-0" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
-                      Once you complete your purchase, you&apos;ll receive an email with instructions to download the Reformly app. Simply sign in with your account credentials, and your personalized plan will be ready to use immediately. You can access your workouts, track your progress, and connect with the community all from the app on your phone or tablet.
+                      After starting your free trial, you get access to the upgraded Reformly mobile app with your plan. Available both on iOS and Android. Everything is set up already. We are going to guide and support you through the whole process.
                     </p>
                   </motion.div>
                 )}
@@ -948,11 +1041,18 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
         <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-8 sm:mb-12 md:mb-16 mt-8 sm:mt-12 md:mt-16 px-2" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
           Get visible results in 4 weeks!
             </h2>
+          {isLoadingPlans ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-gray-600">Loading plans...</div>
+            </div>
+          ) : plans.length === 0 ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-red-600">Failed to load plans. Please refresh the page.</div>
+            </div>
+          ) : (
           <div className="flex flex-col md:flex-row gap-3 sm:gap-4 items-end">
             {plans.map((plan) => {
               const isSelected = selectedPlan === plan.id
-              const isPopular = plan.id === '4-week'
-              const isBestValue = plan.id === 'yearly'
               
               return (
                 <motion.div
@@ -1082,18 +1182,24 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
               )
             })}
           </div>
+          )}
         </div>
         
         {/* Duplicate Get My Plan Button */}
-        <div className="flex justify-center mb-6 sm:mb-8">
+        <div className="flex flex-col items-center mb-6 sm:mb-8">
           <Button
             variant="primary"
             size="md"
             className="w-full max-w-[340px] py-3 sm:py-[13.6px] text-sm sm:text-base md:text-[17px] font-bold"
             onClick={handleGetPlan}
+            isLoading={isProcessingCheckout}
+            disabled={isProcessingCheckout || !selectedPlan || isLoadingPlans}
           >
-            GET MY PLAN
+            {isProcessingCheckout ? 'Processing...' : 'GET MY PLAN'}
           </Button>
+          {checkoutError && (
+            <p className="text-xs text-red-500 mt-2 text-center max-w-[340px]">{checkoutError}</p>
+          )}
         </div>
         
         {/* Money-Back Guarantee Section */}

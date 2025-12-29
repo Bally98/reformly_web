@@ -19,14 +19,19 @@ export default function OnboardingPage() {
     }
   }, [currentStep, auth.isVerified])
   
+  // Auto-advance from step 2 (OTP) to step 3 when verification is complete
+  useEffect(() => {
+    if (currentStep === 2 && auth.isVerified) {
+      console.log('[OnboardingPage] User verified, auto-advancing to step 3')
+      setCurrentStep(3)
+    }
+  }, [auth.isVerified, currentStep])
+  
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS - 1) {
       // Guard: prevent going to protected steps without verification
-      if (currentStep === 2 && !auth.isVerified) {
-        // Can't proceed from OTP step without verification
-        return
-      }
-      if (currentStep >= 2 && !auth.isVerified) {
+      // Note: Step 2 (OTP) auto-advances via useEffect when verified, so we skip the check here
+      if (currentStep > 2 && !auth.isVerified) {
         // Can't proceed to protected steps without verification
         setCurrentStep(1) // Redirect to email step
         return

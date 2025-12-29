@@ -50,13 +50,25 @@ export const verifyEmailOtp = async (email: string, code: string): Promise<ApiRe
       body: JSON.stringify({ email, code }),
     })
     
+    console.log('[verifyEmailOtp] Response data:', data)
+    
+    // Check if we have valid data (not empty object)
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+      console.warn('[verifyEmailOtp] Empty or invalid response data')
+      return { ok: false, error: 'Invalid response from server' }
+    }
+    
     // Store backend tokens
     if (data.accessToken && data.refreshToken) {
       setBackendTokens(data.accessToken, data.refreshToken)
+      console.log('[verifyEmailOtp] Backend tokens stored successfully')
+    } else {
+      console.warn('[verifyEmailOtp] Missing accessToken or refreshToken in response')
     }
     
     return { ok: true, data }
   } catch (error) {
+    console.error('[verifyEmailOtp] Error:', error)
     const message = error instanceof ApiClientError ? error.message : 'Invalid verification code'
     return { ok: false, error: message }
   }
@@ -103,6 +115,90 @@ export const createStripeCheckoutSession = async (planId: string): Promise<ApiRe
     return { ok: true, data }
   } catch (error) {
     const message = error instanceof ApiClientError ? error.message : 'Failed to create checkout session'
+    return { ok: false, error: message }
+  }
+}
+
+export interface SubscriptionPlan {
+  id: string
+  amount: number
+  currency: string
+  interval: 'week' | 'month' | 'year'
+  intervalCount: number
+  product: {
+    id: string
+    name: string
+    description: string | null
+  }
+  nickname: string | null
+  metadata: Record<string, any>
+}
+
+export interface CheckoutResponse {
+  url: string
+}
+
+/**
+ * Get subscription plans
+ */
+export const getSubscriptionPlans = async (limit: number = 3): Promise<ApiResponse<SubscriptionPlan[]>> => {
+  try {
+    const data = await apiClient<SubscriptionPlan[]>(`/subscriptions/plans?limit=${limit}`, {
+      method: 'GET',
+    })
+    return { ok: true, data }
+  } catch (error) {
+    const message = error instanceof ApiClientError ? error.message : 'Failed to get subscription plans'
+    return { ok: false, error: message }
+  }
+}
+
+/**
+ * Create checkout session for subscription
+ */
+export const createSubscriptionCheckout = async (priceId: string): Promise<ApiResponse<CheckoutResponse>> => {
+  try {
+    const data = await apiClient<CheckoutResponse>('/subscriptions/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ priceId }),
+    })
+    return { ok: true, data }
+  } catch (error) {
+    const message = error instanceof ApiClientError ? error.message : 'Failed to create checkout session'
+    return { ok: false, error: message }
+  }
+}
+
+export interface FirebaseAuthResponse {
+  accessToken: string
+  refreshToken: string
+  user: {
+    id: string
+    email: string
+    role: string
+  }
+}
+
+/**
+ * Authenticate with Firebase (Google/Apple)
+ * Sends idToken to backend /auth/firebase endpoint
+ */
+export const authenticateWithFirebase = async (idToken: string): Promise<ApiResponse<FirebaseAuthResponse>> => {
+  try {
+    const data = await apiClient<FirebaseAuthResponse>('/auth/firebase', {
+      method: 'POST',
+      skipAuth: true, // Don't use Firebase token for this request, we're sending idToken in body
+      body: JSON.stringify({ idToken }),
+    })
+    
+    // Store backend tokens
+    if (data.accessToken && data.refreshToken) {
+      setBackendTokens(data.accessToken, data.refreshToken)
+    }
+    
+    return { ok: true, data }
+  } catch (error) {
+    const message = error instanceof ApiClientError ? error.message : 'Failed to authenticate with Firebase'
     return { ok: false, error: message }
   }
 }
