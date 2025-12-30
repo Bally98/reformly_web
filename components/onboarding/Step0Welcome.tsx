@@ -46,24 +46,13 @@ export default function Step0Welcome({ onNext }: Step0WelcomeProps) {
       }
       
       // Step 4: Update auth state
+      // The navigation to step 3 will be handled by useEffect in OnboardingPage
+      // that watches for auth.isVerified && auth.provider === 'google'
       setAuth({
         email: user.email || '',
         provider: 'google',
         isVerified: true,
       })
-      
-      // Step 5: Proceed to step 3 (skip email/OTP steps since user is already verified)
-      // Call onNext() multiple times to skip steps 1 and 2
-      // Using setTimeout to ensure state updates are processed first
-      setTimeout(() => {
-        onNext() // Step 0 -> Step 1
-        setTimeout(() => {
-          onNext() // Step 1 -> Step 2
-          setTimeout(() => {
-            onNext() // Step 2 -> Step 3
-          }, 50)
-        }, 50)
-      }, 50)
     } catch (error: any) {
       console.error('Google authentication failed:', error)
       setGoogleError(error.message || 'Failed to sign in with Google. Please try again.')

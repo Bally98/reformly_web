@@ -14,10 +14,11 @@ export default function OnboardingPage() {
   useEffect(() => {
     // Steps 0, 1, 2 are public (welcome, email, OTP)
     // Steps 3+ require verification
-    if (currentStep >= 3 && !auth.isVerified) {
+    // Skip guard if user just authenticated with Google (they should go to step 3)
+    if (currentStep >= 3 && !auth.isVerified && auth.provider !== 'google') {
       setCurrentStep(1) // Redirect to email step
     }
-  }, [currentStep, auth.isVerified])
+  }, [currentStep, auth.isVerified, auth.provider])
   
   // Auto-advance from step 2 (OTP) to step 3 when verification is complete
   useEffect(() => {
@@ -26,6 +27,14 @@ export default function OnboardingPage() {
       setCurrentStep(3)
     }
   }, [auth.isVerified, currentStep])
+  
+  // Auto-advance to step 3 when Google auth is complete (skip email/OTP steps)
+  useEffect(() => {
+    if (auth.isVerified && auth.provider === 'google' && currentStep <= 2) {
+      console.log('[OnboardingPage] Google auth complete, skipping to step 3')
+      setCurrentStep(3)
+    }
+  }, [auth.isVerified, auth.provider, currentStep])
   
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS - 1) {
