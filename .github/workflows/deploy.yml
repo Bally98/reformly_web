@@ -27,12 +27,29 @@ jobs:
             echo "=== Starting deployment ==="
             cd ${{ secrets.DEPLOY_PATH }}
             echo "=== Current directory: $(pwd) ==="
+            
+            # Switch git remote to HTTPS to avoid SSH key issues
+            echo "=== Configuring git remote ==="
+            # Use token if available, otherwise use public HTTPS
+            if [ -n "${{ secrets.DEPLOY_TOKEN }}" ]; then
+              REPO_URL="https://${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}.git"
+            else
+              REPO_URL="https://github.com/${{ github.repository }}.git"
+            fi
+            git remote set-url origin "$REPO_URL" || git remote add origin "$REPO_URL"
+            
+            # Configure git to use HTTPS
+            git config --global url."https://github.com/".insteadOf "git@github.com:" || true
+            git config --global url."https://".insteadOf "git://" || true
+            
             echo "=== Pulling latest changes ==="
-            git pull origin main || git pull origin master
+            git fetch origin
+            git reset --hard origin/main || git reset --hard origin/master
+            git clean -fd
+            
             echo "=== Building and starting containers ==="
             make up-prod
             echo "=== Checking container status ==="
             make ps-prod || true
             echo "=== Deployment complete ==="
-          envs: GIT_TERMINAL_PROMPT=0
 
