@@ -39,12 +39,12 @@ services:
     labels:
       # Traefik labels for automatic service discovery
       - "traefik.enable=true"
-      - "traefik.http.routers.reformly-web.rule=Host(`web.129.212.162.195.sslip.io`)"
+      - "traefik.http.routers.reformly-web.rule=Host(`quiz.reformly.com`)"
       - "traefik.http.routers.reformly-web.entrypoints=websecure"
       - "traefik.http.routers.reformly-web.tls.certresolver=letsencrypt"
       - "traefik.http.services.reformly-web.loadbalancer.server.port=3000"
       # Alternative HTTP entrypoint (uncomment if needed)
-      # - "traefik.http.routers.reformly-web-http.rule=Host(`web.129.212.162.195.sslip.io`)"
+      # - "traefik.http.routers.reformly-web-http.rule=Host(`quiz.reformly.com`)"
       # - "traefik.http.routers.reformly-web-http.entrypoints=web"
       # - "traefik.http.routers.reformly-web-http.middlewares=redirect-to-https"
     networks:
