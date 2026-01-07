@@ -1267,7 +1267,7 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
             <p className="text-gray-700 text-sm sm:text-base px-2" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
               Find more about applicable limitations in our{' '}
               <a 
-                href="https://betterme-wallpilates.com/en/money-back-policy" 
+                href="https://reformly.com/policies/refund-policy" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-[#5630B0] hover:underline font-medium"
