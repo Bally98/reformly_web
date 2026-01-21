@@ -18,14 +18,15 @@ export default function PaymentErrorPage() {
 
   const handleClose = () => {
     setShowModal(false)
-    // Navigate to onboarding step 15
-    router.push('/onboarding?step=15') // step 15 is index for step 15 (0-based)
+    // Navigate to onboarding step 15 (last step, payment page, 0-based index 14)
+    router.push('/onboarding?step=14')
   }
 
   const handleTryAgain = () => {
     setShowModal(false)
-    // Navigate to onboarding step 15 with payment
-    router.push('/onboarding?step=15') // step 15 is index for step 15 (0-based)
+    // Navigate to onboarding step 15 (last step, payment page, 0-based index 14)
+    // User will see step 15 with all saved onboarding data
+    router.push('/onboarding?step=14')
   }
 
   // Empty handlers for background Step15 component

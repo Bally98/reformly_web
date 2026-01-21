@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 export interface OnboardingState {
   // Auth
@@ -128,44 +129,91 @@ const initialState = {
   },
 }
 
-export const useOnboardingStore = create<OnboardingState>((set, get) => ({
-  ...initialState,
-  
-  setAuth: (auth) => set((state) => ({ auth: { ...state.auth, ...auth } })),
-  setAboutYou: (patch) =>
-    set((state) => ({
-      aboutYou: { ...state.aboutYou, ...patch },
-    })),
-  setMetrics: (metrics) => set((state) => ({ 
-    metrics: { 
-      ...state.metrics, 
-      ...metrics,
-      height: metrics.height ? { ...state.metrics.height, ...metrics.height } : state.metrics.height,
-      currentWeight: metrics.currentWeight ? { ...state.metrics.currentWeight, ...metrics.currentWeight } : state.metrics.currentWeight,
-      bmi: metrics.bmi ? { ...state.metrics.bmi, ...metrics.bmi } : state.metrics.bmi,
-      goalWeight: metrics.goalWeight ? { ...state.metrics.goalWeight, ...metrics.goalWeight } : state.metrics.goalWeight,
-    } 
-  })),
-  setRating: (rating) => set((state) => ({ rating: { ...state.rating, ...rating } })),
-  setPlanPreview: (planPreview) => set((state) => ({ planPreview: { ...state.planPreview, ...planPreview } })),
-  setSubscription: (subscription) => set((state) => ({ subscription: { ...state.subscription, ...subscription } })),
-  setProfile: (profile) => set((state) => ({ profile: { ...state.profile, ...profile } })),
-  
-  reset: () => set(initialState),
-  
-  getAllData: () => {
-    const state = get()
-    return {
-      auth: state.auth,
-      aboutYou: {
-        ...state.aboutYou,
-        birthday: state.aboutYou.birthday?.toISOString() || null,
+export const useOnboardingStore = create<OnboardingState>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
+      
+      setAuth: (auth) => set((state) => ({ auth: { ...state.auth, ...auth } })),
+      setAboutYou: (patch) =>
+        set((state) => {
+          // Handle Date conversion if birthday comes as string from localStorage
+          const processedPatch = { ...patch }
+          if (processedPatch.birthday && typeof processedPatch.birthday === 'string') {
+            processedPatch.birthday = new Date(processedPatch.birthday)
+          }
+          return {
+            aboutYou: { ...state.aboutYou, ...processedPatch },
+          }
+        }),
+      setMetrics: (metrics) => set((state) => ({ 
+        metrics: { 
+          ...state.metrics, 
+          ...metrics,
+          height: metrics.height ? { ...state.metrics.height, ...metrics.height } : state.metrics.height,
+          currentWeight: metrics.currentWeight ? { ...state.metrics.currentWeight, ...metrics.currentWeight } : state.metrics.currentWeight,
+          bmi: metrics.bmi ? { ...state.metrics.bmi, ...metrics.bmi } : state.metrics.bmi,
+          goalWeight: metrics.goalWeight ? { ...state.metrics.goalWeight, ...metrics.goalWeight } : state.metrics.goalWeight,
+        } 
+      })),
+      setRating: (rating) => set((state) => ({ rating: { ...state.rating, ...rating } })),
+      setPlanPreview: (planPreview) => set((state) => ({ planPreview: { ...state.planPreview, ...planPreview } })),
+      setSubscription: (subscription) => set((state) => ({ subscription: { ...state.subscription, ...subscription } })),
+      setProfile: (profile) => set((state) => ({ profile: { ...state.profile, ...profile } })),
+      
+      reset: () => set(initialState),
+      
+      getAllData: () => {
+        const state = get()
+        return {
+          auth: state.auth,
+          aboutYou: {
+            ...state.aboutYou,
+            birthday: state.aboutYou.birthday?.toISOString() || null,
+          },
+          metrics: state.metrics,
+          rating: state.rating,
+          planPreview: state.planPreview,
+          subscription: state.subscription,
+          profile: state.profile,
+        }
       },
-      metrics: state.metrics,
-      rating: state.rating,
-      planPreview: state.planPreview,
-      subscription: state.subscription,
-      profile: state.profile,
+    }),
+    {
+      name: 'onboarding-storage', // unique name for localStorage key
+      storage: createJSONStorage(() => localStorage),
+      // Handle Date serialization/deserialization
+      partialize: (state) => {
+        // Convert Date to ISO string for storage
+        const serialized = { ...state }
+        if (serialized.aboutYou?.birthday instanceof Date) {
+          return {
+            ...serialized,
+            aboutYou: {
+              ...serialized.aboutYou,
+              birthday: serialized.aboutYou.birthday.toISOString(),
+            },
+          }
+        }
+        return serialized
+      },
+      // Restore Date objects from ISO strings
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('[OnboardingStore] Error rehydrating from storage:', error)
+          return
+        }
+        if (state?.aboutYou?.birthday && typeof state.aboutYou.birthday === 'string') {
+          console.log('[OnboardingStore] Converting birthday string to Date:', state.aboutYou.birthday)
+          state.aboutYou.birthday = new Date(state.aboutYou.birthday)
+        }
+        console.log('[OnboardingStore] Rehydrated state:', {
+          hasMainGoal: !!state?.aboutYou?.mainGoal,
+          hasHeight: !!state?.metrics?.height?.value,
+          hasName: !!state?.profile?.name,
+          hasWeight: !!state?.metrics?.currentWeight?.value,
+        })
+      },
     }
-  },
-}))
+  )
+)
