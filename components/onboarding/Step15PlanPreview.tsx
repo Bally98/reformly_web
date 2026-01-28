@@ -251,7 +251,7 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
       {/* Main Content - Scrollable */}
       <div className="px-4 sm:px-6 pb-8 sm:pb-12">
         {/* Title and Plan Summary Container */}
-        <div className="mb-8 sm:mb-12 flex flex-col items-center">
+        <div className="mb-0 lg:mb-8 flex flex-col items-center">
           {/* Title */}
           <h2 
             ref={titleRef}
@@ -260,119 +260,110 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
             {name}, your personalized plan is ready!
           </h2>
           
-          {/* Plan Summary Section - matches title width */}
-          <div 
-            className="flex flex-col lg:flex-row items-start" 
-            style={{ 
-              width: titleWidth > 0 ? `${titleWidth}px` : '100%',
-              maxWidth: '100%'
-            }}
-          >
-            {/* Left: Chart */}
-            <div className="flex-shrink-0 w-full lg:w-auto mb-6 lg:mb-0">
-              <div className="bg-white rounded-2xl py-6 sm:py-8 md:py-12 px-2 relative" style={{ minHeight: '200px' }}>
-                <div className="relative flex flex-col items-center justify-center mx-auto" style={{ width: '100%', maxWidth: `${graphWidth}px` }}>
-                  {/* Graph SVG */}
-                <div className="relative w-full" style={{ maxWidth: `${graphWidth}px`, aspectRatio: `${graphWidth}/${graphHeight}` }}>
-                  <Image
-                    src={graphSrc}
-                    alt="Progress Graph"
-                    width={graphWidth}
-                    height={graphHeight}
-                    className="object-contain w-full h-full"
-                  />
-                  
-                </div>
-                
-                {/* Week gradation below the graph */}
-                
+          {/* Plan Summary Section - two equal columns */}
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="flex flex-col lg:flex-row items-stretch gap-0">
+              {/* Left: Chart - 50% width */}
+              <div className="w-full lg:w-1/2 flex items-center justify-center">
+                <div className="bg-white rounded-2xl py-6 sm:py-8 md:py-12 px-4 w-full h-full flex items-center justify-center">
+                  <div className="relative w-full" style={{ maxWidth: `${graphWidth}px`, aspectRatio: `${graphWidth}/${graphHeight}` }}>
+                    <Image
+                      src={graphSrc}
+                      alt="Progress Graph"
+                      width={graphWidth}
+                      height={graphHeight}
+                      className="object-contain w-full h-full"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Right: Info Card and Image */}
-            <div className="flex flex-col lg:flex-row gap-0 items-start flex-shrink-0 relative lg:ml-12 w-full lg:w-auto">
-            {/* Info Card */}
-            <div className="bg-[#EAE2FF] rounded-2xl p-4 sm:p-5 md:p-6 w-full lg:w-auto relative" style={{ minHeight: '180px', minWidth: '180%' }}>
-              <div className="h-full flex flex-col gap-2 py-2">
-                {/* Duration */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 relative" style={{ width: '42px', height: '42px' }}>
-                    <Image
-                      src="/logos/duration.svg"
-                      alt="Duration"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <div className="text-gray-800 text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>12 weeks</div>
-                    <div className="text-gray-600 font-medium" style={{ fontFamily: 'var(--font-plus-jakarta-sans)', fontSize: '11px' }}>Duration</div>
-                  </div>
-                </div>
-                
-                {/* Goal */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0 relative" style={{ width: '42px', height: '42px' }}>
-                    <Image
-                      src="/logos/goal.svg"
-                      alt="Goal"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <div className="text-gray-800 text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>{mainGoal}</div>
-                    <div className="text-gray-600 font-medium" style={{ fontFamily: 'var(--font-plus-jakarta-sans)', fontSize: '11px' }}>Goal</div>
-                  </div>
-                </div>
-                
-                {/* Interests */}
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 relative pt-1" style={{ width: '42px', height: '42px' }}>
-                    <Image
-                      src="/logos/self_love_2.svg"
-                      alt="Interests"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="mb-1">
-                      {displayActivities.length === 1 ? (
-                        <div className="text-gray-800 text-sm font-bold" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
-                          {displayActivities[0]}
-                        </div>
-                      ) : displayActivities.length === 2 ? (
-                        <div className="text-gray-800 text-sm font-bold" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
-                          {displayActivities[0]} and {displayActivities[1]}
-                        </div>
-                      ) : (
-                        <div className="text-gray-800 text-sm font-bold" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
-                          Get lean and strong
-                        </div>
-                      )}
+              
+              {/* Right: Info Card and Image - 50% width */}
+              <div className="w-full lg:w-1/2 relative">
+                {/* Info Card */}
+                <div className="bg-[#EAE2FF] rounded-2xl p-4 sm:p-5 md:p-6 w-full h-full flex items-center" style={{ minHeight: '200px' }}>
+                  <div className="flex flex-col gap-3 py-2 w-full">
+                    {/* Duration */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 relative" style={{ width: '42px', height: '42px' }}>
+                        <Image
+                          src="/logos/duration.svg"
+                          alt="Duration"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-gray-800 text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>12 weeks</div>
+                        <div className="text-gray-600 font-medium" style={{ fontFamily: 'var(--font-plus-jakarta-sans)', fontSize: '11px' }}>Duration</div>
+                      </div>
                     </div>
-                    <div className="text-gray-600 font-medium" style={{ fontFamily: 'var(--font-plus-jakarta-sans)', fontSize: '11px' }}>Interests</div>
+                    
+                    {/* Goal */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 relative" style={{ width: '42px', height: '42px' }}>
+                        <Image
+                          src="/logos/goal.svg"
+                          alt="Goal"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-gray-800 text-sm font-bold mb-0.5" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>{mainGoal}</div>
+                        <div className="text-gray-600 font-medium" style={{ fontFamily: 'var(--font-plus-jakarta-sans)', fontSize: '11px' }}>Goal</div>
+                      </div>
+                    </div>
+                    
+                    {/* Interests */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 relative pt-1" style={{ width: '42px', height: '42px' }}>
+                        <Image
+                          src="/logos/self_love_2.svg"
+                          alt="Interests"
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="mb-1">
+                          {displayActivities.length === 1 ? (
+                            <div className="text-gray-800 text-sm font-bold" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
+                              {displayActivities[0]}
+                            </div>
+                          ) : displayActivities.length === 2 ? (
+                            <div className="text-gray-800 text-sm font-bold" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
+                              {displayActivities[0]} and {displayActivities[1]}
+                            </div>
+                          ) : (
+                            <div className="text-gray-800 text-sm font-bold" style={{ fontFamily: 'var(--font-plus-jakarta-sans)' }}>
+                              Get lean and strong
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-gray-600 font-medium" style={{ fontFamily: 'var(--font-plus-jakarta-sans)', fontSize: '11px' }}>Interests</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Woman Image - positioned to overlap the right edge of the card */}
+                <div className="hidden lg:block absolute" style={{ right: '-120px', bottom: '0', zIndex: 10 }}>
+                  <div className="relative" style={{ width: '180px', height: '250px' }}>
+                    <Image
+                      src="/images/woman.png" 
+                      alt="Woman"
+                      fill
+                      className="object-contain object-bottom"
+                      priority
+                    />
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Woman Image - positioned over the card from right side, height matches card */}
-            <div className="flex-shrink-0 hidden lg:block absolute" style={{ right: '-210px', bottom: '0', zIndex: 10 }}>
-              <div className="relative" style={{ width: '155px', height: '230px' }}>
-                <Image
-                  src="/images/woman.png" 
-                  alt="Woman"
-                  fill
-                  className="object-contain object-bottom"
-                  priority
-                />
-              </div>
-            </div>
-            {/* Mobile: Show image below card */}
-            <div className="flex-shrink-0 lg:hidden w-full mt-4 flex justify-center">
+            {/* Mobile: Show image below cards - positioned to touch the plans section */}
+            <div className="lg:hidden w-full flex justify-center -mb-4">
               <div className="relative" style={{ width: '200px', height: '160px' }}>
                 <Image
                   src="/images/woman.png" 
@@ -389,7 +380,7 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
         {/* Container for Payment Plans and all content below - sets consistent width */}
         <div className="max-w-7xl mx-auto">
         {/* Payment Plans */}
-          <div className="mb-6 sm:mb-8">
+          <div className="mb-6 sm:mb-8 pt-4 lg:pt-0">
           {isLoadingPlans ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-gray-600">Loading plans...</div>
@@ -1277,7 +1268,6 @@ export default function Step15PlanPreview({ onNext, onBack }: Step15PlanPreviewP
               .
             </p>
           </div>
-        </div>
         </div>
         
         {/* Copyright */}
